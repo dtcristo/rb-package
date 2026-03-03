@@ -4,7 +4,7 @@ This system brings strict, ES Module style encapsulation to Ruby using `Ruby::Bo
 
 ## Exporting (`export`)
 
-The export method exposes objects, methods, or values from the isolated box to the outside world. It has two modes: Single Export and Multiple Exports.
+The `export` method exposes objects, methods, or values from the isolated box to the outside world. It has two modes: Single Export and Multiple Exports.
 
 ### Single Export
 
@@ -21,7 +21,7 @@ export User
 
 ### Multiple Exports (Named Exports)
 
-If a file acts as a collection of utilities, pass a Hash (via keyword arguments) to export.
+If a file acts as a collection of utilities, pass a Hash (via keyword arguments) to `export`.
 
 ```ruby
 # math.rb
@@ -45,7 +45,7 @@ How you receive the imported data depends on how you assign it.
 
 ### The Single Import
 
-If the target file used a Single Export, import returns that exact object.
+If the target file used a Single Export, `import` returns that exact object.
 
 ```ruby
 Customer = import 'user'
@@ -55,7 +55,7 @@ alice = Customer.new("Alice")
 
 ### The Namespace Import
 
-If the target file exported multiple items via a Hash, import returns an anonymous Module containing those exports. You can assign this module to a constant to act as a namespace.
+If the target file exported multiple items via a Hash, `import` returns an anonymous Module containing those exports. You can assign it to a constant to act as a namespace.
 
 - Exported keys starting with a **Capital** letter become Constants on the module.
 - Exported keys starting with a **lowercase** letter become singleton methods on the module.
@@ -73,21 +73,19 @@ puts MathUtils.add(5, 5)  # => 10
 
 ### The Destructuring Import (Pattern Matching)
 
-Instead of assigning the entire namespace to a constant, you can use Ruby 3's rightward assignment (`=>`) pattern matching to pluck exactly what you need into your local scope.
+Instead of assigning the entire namespace to a constant, you can use Ruby's rightward assignment (`=>`) pattern matching to pluck exactly what you need.
 
 ```ruby
-import_relative('math') => { add:, version: }
+import('math') => { add:, version: }
 
 puts add.(5, 5) # => 10
 puts version    # => "1.0.0"
 ```
 
-### Aliased Destructuring & The "Constant" Gotcha
-
-If you want to rename an import to avoid collisions, you map the exported key to a local variable name.
+Rename an import with an alias:
 
 ```ruby
-import_relative('math') => { add: sum }
+import('math') => { add: sum }
 puts sum.(10, 10) # => 20
 ```
 
