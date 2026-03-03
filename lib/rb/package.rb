@@ -74,16 +74,15 @@ module Rb
     end
 
     def self.extract_exports(box)
-      begin
-        box::Rb::Package::Exports
-      rescue NameError
-        begin
-          box::Rb::Package::EXPORT
-        rescue NameError
-          # Bare package/gem with no exports — return the Box instance directly
-          inject_methods(box, nil, box)
-          box
-        end
+      export_data = Thread.current[:_rb_package_export]
+      Thread.current[:_rb_package_export] = nil
+
+      if export_data
+        export_data
+      else
+        # Bare package/gem with no exports — return the Box instance directly
+        inject_methods(box, nil, box)
+        box
       end
     end
 
@@ -144,13 +143,11 @@ module Rb
           end
 
           # Inject deconstruct_keys and fetch methods to the Exports module
-          # Pass the original exports hash for fetch operations
           Rb::Package.inject_methods(exports_module, value)
 
-          Rb::Package.const_set(:Exports, exports_module)
+          Thread.current[:_rb_package_export] = exports_module
         else
-          # Single exports
-          Rb::Package.const_set(:EXPORT, value)
+          Thread.current[:_rb_package_export] = value
         end
       end
     end
