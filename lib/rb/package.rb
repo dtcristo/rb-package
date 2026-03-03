@@ -2,41 +2,6 @@ raise 'Ruby 4.0+ is required for Rb::Package' if RUBY_VERSION.to_f < 4.0
 
 module Rb
   module Package
-    # Shared logic: for each key-value pair, set constants or singleton methods on a module
-    def self.setup_module_exports(mod, hash)
-      hash.each do |k, v|
-        if k.to_s.match?(/^[A-Z]/)
-          mod.const_set(k, v)
-        else
-          mod.define_singleton_method(k) do |*args, **kw, &blk|
-            v.respond_to?(:call) ? v.call(*args, **kw, &blk) : v
-          end
-        end
-      end
-    end
-
-    # Deconstruct keys for pattern matching (works in Box context)
-    DECONSTRUCT_KEYS_BODY = lambda do |keys|
-      return {} unless keys
-
-      keys.each_with_object({}) do |key, hash|
-        name = key.to_s
-        hash[key] = if name.match?(/\A[A-Z]/)
-          begin
-            const_get(name)
-          rescue NameError
-            next
-          end
-        else
-          begin
-            eval(name)
-          rescue NameError, NoMethodError
-            next
-          end
-        end
-      end
-    end
-
     def self.gem_require_paths(name, visited = Set.new)
       return [] if visited.include?(name)
 
@@ -62,26 +27,43 @@ module Rb
           box.require(expanded)
         else
           # Gem import: inject transitive load paths into the box first
-          ::Rb::Package.gem_require_paths(path).each do |p|
-            box.eval("$LOAD_PATH << #{p.inspect}")
-          end
+          Rb::Package
+            .gem_require_paths(path)
+            .each { |p| box.eval("$LOAD_PATH << #{p.inspect}") }
           box.require(path)
         end
 
-        # Check for Rb::Package::Exports module first
+        # Check for Exports module - hash exports
         begin
-          exports_module = box.const_get(:"Rb").const_get(:"Package").const_get(:Exports)
-          return exports_module
+          return box::Rb::Package::Exports
         rescue NameError
-          # Fall back to EXPORT constant
+          # Fall back to EXPORT constant - single exports
           begin
-            single_export = box.const_get(:"Rb").const_get(:"Package").const_get(:EXPORT)
-            return single_export
+            return box::Rb::Package::EXPORT
           rescue NameError
             # Bare package/gem with no exports — return the Box instance directly
             # Inject deconstruct_keys for pattern matching support
-            box.define_singleton_method(:deconstruct_keys, ::Rb::Package::DECONSTRUCT_KEYS_BODY)
-            return box
+            box.define_singleton_method(:deconstruct_keys) do |keys|
+              return {} unless keys
+
+              keys.each_with_object({}) do |key, hash|
+                name = key.to_s
+                hash[key] = if name.match?(/\A[A-Z]/)
+                  begin
+                    const_get(name)
+                  rescue NameError
+                    next
+                  end
+                else
+                  begin
+                    eval(name)
+                  rescue NameError, NoMethodError
+                    next
+                  end
+                end
+              end
+              return box
+            end
           end
         end
       end
@@ -97,25 +79,29 @@ module Rb
                   'Export takes either a single object or keyword arguments'
           end
 
-        # Rb::Package is always defined in the box (via require)
-        package_module = Object.const_get(:Rb).const_get(:Package)
-
         if value.is_a?(Hash)
           # Create Exports module for hash exports
           exports_module = Module.new
 
-          ::Rb::Package.setup_module_exports(exports_module, value)
+          value.each do |k, v|
+            if k.to_s.match?(/^[A-Z]/)
+              exports_module.const_set(k, v)
+            else
+              exports_module.define_singleton_method(k) do |*args, **kw, &blk|
+                v.respond_to?(:call) ? v.call(*args, **kw, &blk) : v
+              end
+            end
+          end
 
           # Attach deconstruct_keys to the Exports module
           exports_module.define_singleton_method(:deconstruct_keys) do |keys|
             keys ? value.slice(*keys) : value
           end
 
-          # Set the Exports module on Rb::Package
-          package_module.const_set(:Exports, exports_module)
+          Rb::Package.const_set(:Exports, exports_module)
         else
-          # For single exports, set EXPORT constant
-          package_module.const_set(:EXPORT, value)
+          # Single exports
+          Rb::Package.const_set(:EXPORT, value)
         end
       end
     end
