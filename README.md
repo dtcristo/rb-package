@@ -113,9 +113,9 @@ end
  RUBYbox=1 ruby main.rb
  ```
 
- Example importing a legacy gem/package:
+ Example importing a bare gem/package:
  ```ruby
- cd examples/legacy_gem
+ cd examples/bare_gem
  gem install faker
  RUBYbox=1 ruby main.rb
  ```
