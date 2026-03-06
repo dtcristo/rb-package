@@ -1,4 +1,4 @@
-require_relative '../../lib/rb/package'
+require_relative '../../lib/package'
 
 # Single import — Foo exports a module
 Foo = import_relative 'foo'

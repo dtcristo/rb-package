@@ -1,4 +1,4 @@
-require_relative '../../lib/rb/package'
+require_relative '../../lib/package'
 
 # Add all package lib dirs to $LOAD_PATH so packages can be imported by name.
 packages_dir = File.expand_path('packages', __dir__)
@@ -51,4 +51,3 @@ puts '=' * 55
 # (e.g. concurrent-ruby, which faker depends on). The program logic is complete;
 # we just bypass the known VM teardown bug.
 Process.exit!(0)
-

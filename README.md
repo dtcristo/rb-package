@@ -1,4 +1,4 @@
-# Rb::Package
+# Ruby Package
 
 This system brings strict, ES Module style encapsulation to Ruby using [`Ruby::Box`](https://docs.ruby-lang.org/en/4.0/Ruby/Box.html) (requires Ruby 4.0+). Every file is evaluated in a completely isolated namespace, preventing constant leaks and global namespace pollution.
 

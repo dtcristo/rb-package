@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../../test_helper'
+require_relative '../test_helper'
 
-FIXTURES = File.expand_path('../../fixtures', __dir__)
+FIXTURES = File.expand_path('../fixtures', __dir__)
 
 class ExportTest < Minitest::Test
   def test_single_export_returns_class

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../../test_helper'
+require_relative '../test_helper'
 
-FIXTURES_DIR = File.expand_path('../../fixtures', __dir__)
+FIXTURES_DIR = File.expand_path('../fixtures', __dir__)
 
 class ImportTest < Minitest::Test
   def test_import_absolute_path
