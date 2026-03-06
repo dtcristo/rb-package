@@ -3,6 +3,8 @@
 require_relative '../test_helper'
 
 FIXTURES_DIR = File.expand_path('../fixtures', __dir__)
+GEM_LIKE_DIR =
+  File.expand_path('../fixtures/vendor/bundle/fake_gem/lib', __dir__)
 
 class ImportTest < Minitest::Test
   def test_import_absolute_path
@@ -13,10 +15,32 @@ class ImportTest < Minitest::Test
 
   def test_import_hash_namespace
     result = import("#{FIXTURES_DIR}/hash_export")
+    assert_kind_of Package::Exports, result
     assert_respond_to result, :add
     assert_respond_to result, :subtract
     assert_respond_to result, :version
     assert_equal 3.14159, result::PI
+  end
+
+  def test_import_by_name_uses_parent_non_gem_load_path
+    added = !$LOAD_PATH.include?(FIXTURES_DIR)
+    $LOAD_PATH.unshift(FIXTURES_DIR) if added
+
+    result = import('single_export')
+    assert_equal 'User', result.name
+  ensure
+    $LOAD_PATH.delete(FIXTURES_DIR) if added
+  end
+
+  def test_import_does_not_inherit_parent_gem_paths
+    added = !$LOAD_PATH.include?(GEM_LIKE_DIR)
+    $LOAD_PATH.unshift(GEM_LIKE_DIR) if added
+
+    result = import("#{FIXTURES_DIR}/bare")
+    refute_includes result.load_path, GEM_LIKE_DIR
+    assert_raises(LoadError) { import('leaked_feature') }
+  ensure
+    $LOAD_PATH.delete(GEM_LIKE_DIR) if added
   end
 
   def test_import_destructuring

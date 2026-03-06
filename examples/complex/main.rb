@@ -16,7 +16,7 @@ Adventure = import 'adventure'
 Quests = import 'quest'
 
 # --- 3. Destructuring Import + fetch_values ---
-# Loot has its own gems.rb (faker ~> 3.0) — each box gets an isolated Faker namespace
+# Loot has its own gems.rb (faker ~> 2.0) — each box gets an isolated Faker namespace
 import('loot') => {
   random_drop:, VERSION: loot_version, FAKER_VERSION: loot_faker_version
 }

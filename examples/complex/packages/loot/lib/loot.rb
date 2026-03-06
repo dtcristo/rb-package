@@ -14,7 +14,7 @@ require 'bundler/setup'
 
 # Import faker via its bundler-managed load path; Faker here lives in loot's
 # own box namespace — completely separate from adventure's Faker constant.
-Faker = import('faker')::Faker
+require 'faker'
 
 require 'loot/item'
 

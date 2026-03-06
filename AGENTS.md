@@ -19,4 +19,6 @@ Guidelines for AI agents working on this codebase.
 - Run `bundle exec rake format` to format code after every change.
 - Fix any warnings.
 - Use sub-agents where appropriate.
+- Never use thread local variables in implementation.
+- Always review https://docs.ruby-lang.org/en/4.0/Ruby/Box.html on how `Ruby::Box` works.
 - Never bump version or publish gem.

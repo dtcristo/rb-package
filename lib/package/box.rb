@@ -1,0 +1,129 @@
+# frozen_string_literal: true
+
+module Package
+  class Box < Ruby::Box
+    include ExportMethods
+
+    UNSET_EXPORT = Object.new.freeze
+    private_constant :UNSET_EXPORT
+
+    def initialize
+      super
+      reset_export
+    end
+
+    private
+
+    def configure_for_import(parent_box:, entrypoint:, bundle_gemfile:)
+      inherit_load_path(parent_box)
+      reset_export
+      require_in_box(entrypoint)
+      set_bundle_gemfile(bundle_gemfile)
+      self
+    end
+
+    def require_in_box(feature)
+      eval("require #{feature.inspect}")
+    end
+
+    def resolve_feature_path_in_box(feature)
+      eval("$LOAD_PATH.resolve_feature_path(#{feature.inspect})")
+    end
+
+    def activate_bundle_if_configured
+      gemfile = ENV['BUNDLE_GEMFILE']
+      return unless gemfile && File.file?(gemfile)
+
+      require_in_box('bundler/setup')
+    end
+
+    def set_export(value)
+      @export = value
+    end
+
+    def export_set?
+      !@export.equal?(UNSET_EXPORT)
+    end
+
+    def export_value
+      @export
+    end
+
+    def reset_export
+      @export = UNSET_EXPORT
+    end
+
+    def set_bundle_gemfile(path)
+      return unless path
+
+      eval("ENV['BUNDLE_GEMFILE'] = #{path.inspect}")
+    end
+
+    def inherit_load_path(source_box)
+      return self unless source_box.respond_to?(:load_path)
+
+      source_box.load_path.each do |path|
+        next unless inherit_path?(path)
+
+        load_path << path unless load_path.include?(path)
+      end
+
+      self
+    end
+
+    def inherit_path?(path)
+      expanded = File.expand_path(path)
+      !gem_path?(expanded)
+    end
+
+    def gem_path?(path)
+      gem_roots = Gem.path.map { |root| File.expand_path(root) }
+      gem_roots.any? { |root| path == root || path.start_with?("#{root}/") } ||
+        path.include?('/vendor/bundle/') || path.include?('/bundler/gems/')
+    end
+
+    def lookup(key)
+      name = key.to_s
+
+      if name.match?(/\A[A-Z]/)
+        begin
+          self.const_get(name)
+        rescue NameError
+          nil
+        end
+      else
+        begin
+          self.eval(name)
+        rescue NameError, NoMethodError
+          begin
+            self.__send__(name)
+          rescue NoMethodError
+            nil
+          end
+        end
+      end
+    end
+
+    def lookup_for_pattern(key)
+      name = key.to_s
+
+      if name.match?(/\A[A-Z]/)
+        begin
+          [true, self.const_get(name)]
+        rescue NameError
+          [false, nil]
+        end
+      else
+        begin
+          [true, self.eval(name)]
+        rescue NameError, NoMethodError
+          begin
+            [true, self.__send__(name)]
+          rescue NoMethodError
+            [false, nil]
+          end
+        end
+      end
+    end
+  end
+end

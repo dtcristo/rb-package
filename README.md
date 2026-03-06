@@ -41,7 +41,10 @@ There are two methods available globally to load these isolated files:
 - `import(path)`: Resolves the path using Ruby's native `$LOAD_PATH` or gem lookup. Ideal for gems and libraries.
 - `import_relative(path)`: Resolves the path relative to the directory of the file calling it (exactly like `require_relative`). Ideal for local project files.
 
-How you receive the imported data depends on how you assign it.
+`import` / `import_relative` always returns one of these:
+- a default export object (single export),
+- a `Package::Exports` instance for named/hash exports (`Package::Exports < Module`),
+- or a `Package::Box` instance when the target has no explicit export.
 
 ### The Single Import
 
@@ -55,7 +58,7 @@ alice = Customer.new("Alice")
 
 ### The Namespace Import
 
-If the target file exported multiple items via a Hash, the import returns an anonymous Module containing those exports. You can assign it to a constant to act as a namespace.
+If the target file exported multiple items via a Hash, the import returns a `Package::Exports` instance containing those exports. You can assign it to a constant to act as a namespace.
 
 - Exported keys starting with a **Capital** letter become Constants on the module.
 - Exported keys starting with a **lowercase** letter become singleton methods on the module.
@@ -135,7 +138,7 @@ end
 
 ### Importing from Bare Gems/Scripts
 
-If a gem or script file doesn't export anything explicitly (no `export` call), `import` returns the isolated Box instance itself. This allows you to access any constants or methods defined within that gem/script directly through the Box namespace. See the "Importing Constants" section above for all available approaches.
+If a gem or script file doesn't export anything explicitly (no `export` call), `import` returns the isolated `Package::Box` instance itself (`Package::Box < Ruby::Box`). This allows you to access any constants or methods defined within that gem/script directly through the Box namespace.
 
 ```ruby
 Faker = import('faker')::Faker
@@ -153,8 +156,8 @@ ENV['BUNDLE_GEMFILE'] = File.expand_path('../gems.rb', __dir__)
 require 'bundler/setup'
 
 # Now gems from this package's bundle are on $LOAD_PATH
-# and import() for gem names will find them.
-Faker = import('faker')::Faker
+require 'faker'
+Faker = ::Faker
 
 # ... rest of package
 ```
@@ -163,7 +166,7 @@ Because every `import` runs in its own `Ruby::Box` with its own isolated `$LOAD_
 
 ### How `import` resolves `$LOAD_PATH`
 
-`import` captures a live reference to the calling box's `$LOAD_PATH` at definition time using `define_method`. Since `bundler/setup` **mutates** (not replaces) the same array object, paths added by `bundler/setup` are automatically visible when `import` resolves names. The child box's C-level `$LOAD_PATH` (searched by `require`) is seeded by writing a temp file of `$LOAD_PATH.unshift` calls and running it via `box.require`, so that native `require` inside the child box works correctly.
+`import` reads `Ruby::Box.current.load_path` at call time and copies non-gem entries into a new `Package::Box` before resolving the target there. This keeps package-local paths available while preventing parent gem load paths from leaking into child import boxes.
 
 ## Examples
 
@@ -179,9 +182,9 @@ RUBY_BOX=1 ruby examples/minimal/main.rb
 
 An adventure game with three packages in a `packages/` directory using zeitwerk-style naming. Demonstrates all features including `bundler/setup` for per-package gem dependencies, cross-package `import`, `fetch`/`fetch_values`, constants, and namespace-qualified gem constants.
 
-- **adventure**: Uses `faker` and `colorize` gems via its own `gems.rb` and `bundler/setup`. Imports faker as `Faker = import('faker')::Faker`.
+- **adventure**: Uses `faker` (`~> 3.0`) and `colorize` via its own `gems.rb` and `bundler/setup`. Requires faker as `Faker = ::Faker`.
 - **quest**: Pure-Ruby package. Hash exports with constants, version strings, and callable methods.
-- **loot**: Uses `faker` gem via its own `gems.rb` and `bundler/setup` (each box gets an isolated `Faker` constant). Cross-package `import 'quest'`.
+- **loot**: Uses `faker` (`~> 2.0`) via its own `gems.rb` and `bundler/setup` (each box gets an isolated `Faker` constant). Cross-package `import 'quest'`.
 
 Each package adds all sibling `packages/*/lib` dirs to `$LOAD_PATH` so cross-package imports resolve by name. `main.rb` does the same before calling `import`.
 

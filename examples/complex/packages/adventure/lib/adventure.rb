@@ -11,7 +11,7 @@ ENV['BUNDLE_GEMFILE'] = File.expand_path('../gems.rb', __dir__)
 require 'bundler/setup'
 
 # Import faker via its bundler-managed load path (faker 3.x)
-Faker = import('faker')::Faker
+require 'faker'
 
 # Require instead of import to get `String#colorize`
 require 'colorize'
