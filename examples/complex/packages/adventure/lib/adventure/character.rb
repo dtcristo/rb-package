@@ -1,4 +1,4 @@
-require 'colorize'
+# frozen_string_literal: true
 
 module Adventure
   class Character

@@ -1,27 +1,46 @@
+# frozen_string_literal: true
+
 module Loot
   class Item
     attr_reader :name, :tier, :power
 
     ITEMS = {
       common: [
-        'Wooden Sword', 'Leather Boots', 'Torn Map',
-        'Rusty Shield', 'Stale Bread'
+        'Wooden Sword',
+        'Leather Boots',
+        'Torn Map',
+        'Rusty Shield',
+        'Stale Bread',
       ],
       uncommon: [
-        'Iron Axe', 'Chainmail Vest', 'Healing Potion',
-        'Silver Ring', 'Enchanted Torch'
+        'Iron Axe',
+        'Chainmail Vest',
+        'Healing Potion',
+        'Silver Ring',
+        'Enchanted Torch',
       ],
       rare: [
-        'Flamebrand Sword', 'Mithril Armor', 'Scroll of Fireball',
-        'Dragon Scale Shield', 'Boots of Speed'
+        'Flamebrand Sword',
+        'Mithril Armor',
+        'Scroll of Fireball',
+        'Dragon Scale Shield',
+        'Boots of Speed',
       ],
       epic: [
-        'Excalibur', 'Cloak of Invisibility', 'Staff of the Archmage',
-        'Crown of Kings', 'Amulet of Eternity'
-      ]
+        'Excalibur',
+        'Cloak of Invisibility',
+        'Staff of the Archmage',
+        'Crown of Kings',
+        'Amulet of Eternity',
+      ],
     }.freeze
 
-    POWER = { common: 1..10, uncommon: 11..25, rare: 26..50, epic: 51..100 }.freeze
+    POWER = {
+      common: 1..10,
+      uncommon: 11..25,
+      rare: 26..50,
+      epic: 51..100,
+    }.freeze
 
     def initialize(name, tier)
       @name = name

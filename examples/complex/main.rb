@@ -1,8 +1,12 @@
+# frozen_string_literal: true
+
 require_relative '../../lib/package'
 
 # Add all package lib dirs to $LOAD_PATH so packages can be imported by name.
 packages_dir = File.expand_path('packages', __dir__)
-Dir.glob("#{packages_dir}/*/lib") { |d| $LOAD_PATH.unshift(d) unless $LOAD_PATH.include?(d) }
+Dir.glob("#{packages_dir}/*/lib") do |d|
+  $LOAD_PATH.unshift(d) unless $LOAD_PATH.include?(d)
+end
 
 # --- 1. Single Import ---
 # Adventure package has its own gems.rb (faker ~> 3.0, colorize) with bundler/setup
@@ -13,7 +17,9 @@ Quests = import 'quest'
 
 # --- 3. Destructuring Import + fetch_values ---
 # Loot has its own gems.rb (faker ~> 3.0) — each box gets an isolated Faker namespace
-import('loot') => { random_drop:, VERSION: loot_version, FAKER_VERSION: loot_faker_version }
+import('loot') => {
+  random_drop:, VERSION: loot_version, FAKER_VERSION: loot_faker_version
+}
 
 # --- 4. fetch_values ---
 max_challenges, quest_version = Quests.fetch_values(:MAX_CHALLENGES, :version)
@@ -32,8 +38,12 @@ puts
 quest = Quests.random_quest(difficulty: :hard)
 narrator.announce("📜 Quest: #{quest[:name]} [#{quest[:difficulty]}]")
 narrator.describe("Max challenges allowed: #{max_challenges}")
-narrator.describe("Quest system v#{quest_version} | Loot system v#{loot_version}")
-narrator.describe("Adventure faker v#{Adventure.faker_version} | Loot faker v#{loot_faker_version}")
+narrator.describe(
+  "Quest system v#{quest_version} | Loot system v#{loot_version}",
+)
+narrator.describe(
+  "Adventure faker v#{Adventure.faker_version} | Loot faker v#{loot_faker_version}",
+)
 puts
 
 quest[:challenges].each_with_index do |challenge, i|

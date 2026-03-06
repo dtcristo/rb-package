@@ -1,6 +1,8 @@
-raise "Ruby 4.0+ is required for Package" if RUBY_VERSION.to_f < 4.0
+# frozen_string_literal: true
 
-require "tempfile"
+raise 'Ruby 4.0+ is required for Package' if RUBY_VERSION.to_f < 4.0
+
+require 'tempfile'
 
 # Global registry of boxes created by import/import_relative. Kept alive here
 # to prevent Ruby::Box GC crashes when boxes that loaded native-extension gems
@@ -79,7 +81,7 @@ module Package
     begin
       paths.each do |p|
         tmp.puts(
-          "$LOAD_PATH.unshift(#{p.inspect}) unless $LOAD_PATH.include?(#{p.inspect})"
+          "$LOAD_PATH.unshift(#{p.inspect}) unless $LOAD_PATH.include?(#{p.inspect})",
         )
       end
       tmp.close
@@ -171,7 +173,7 @@ module Package
           args.first # Single export
         else
           raise ArgumentError,
-                "Export takes either a single object or keyword arguments"
+                'Export takes either a single object or keyword arguments'
         end
 
       if value.is_a?(Hash)

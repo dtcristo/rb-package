@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Bar depends on Baz via import_relative
 Baz = import_relative 'baz'
 

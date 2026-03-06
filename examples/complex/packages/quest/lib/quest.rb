@@ -1,7 +1,11 @@
+# frozen_string_literal: true
+
 # Quest package entry point — no gem dependencies
 # Add all sibling packages' lib dirs to $LOAD_PATH for cross-package imports.
 packages_dir = File.expand_path('../..', __dir__)
-Dir.glob("#{packages_dir}/*/lib") { |d| $LOAD_PATH.unshift(d) unless $LOAD_PATH.include?(d) }
+Dir.glob("#{packages_dir}/*/lib") do |d|
+  $LOAD_PATH.unshift(d) unless $LOAD_PATH.include?(d)
+end
 
 require 'quest/challenge'
 
@@ -18,5 +22,5 @@ export(
   Quest:,
   random_quest: Quest.method(:random_quest),
   MAX_CHALLENGES: 5,
-  version: '1.0.0'
+  version: '1.0.0',
 )
